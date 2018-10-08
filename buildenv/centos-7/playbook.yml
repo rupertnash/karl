@@ -1,0 +1,30 @@
+---
+ - name: Install Docker CE
+   hosts: default
+   become: yes
+   tasks:
+    - name: Install prequisites
+      yum:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+        state: latest
+    - name: Add Docker repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docer-ce.repo
+    - name: Install Docker
+      yum:
+        name: docker-ce
+        state: latest
+    - name: Start Docker daemon
+      service:
+        name: docker
+        state: started
+        enabled: yes
+    - name: Add vagrant user to docker group
+      user:
+        name: vagrant
+        groups: docker
+        append: yes

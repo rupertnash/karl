@@ -1,0 +1,46 @@
+---
+ - name: Install Docker CE from their repo
+   hosts: default
+   become: yes
+   tasks:
+    - name: Add Docker signing key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        id: 0EBFCD88
+        state: present
+    - name: Add Docker repo
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable
+        state: present
+    - name: Install Docker
+      apt:
+        name: docker-ce
+    - name: Add vagrant user to docker group
+      user:
+        name: vagrant
+        groups: docker
+        append: yes
+
+ - name: Install Singularity via NeuroDebian repo
+   hosts: default
+   become: yes
+   tasks:
+    - name: Add GPG key
+      apt_key:
+        keyserver: pool.sks-keyservers.net
+        id: A5D32F012649A5A9
+    - name: Add repo
+      apt_repository:
+        repo: deb http://neurodebian.ovgu.de/debian bionic main
+        state: present
+    - name: Install singularity
+      apt:
+        name: singularity-container
+
+ - name: Install builder things
+   hosts: default
+   become: yes
+   tasks:
+    - name: install packer
+      apt:
+        name: packer
