@@ -1,0 +1,43 @@
+{
+    "description": "Build a Docker image with Centos and Intel MPI",
+
+    "variables": {
+	"centos_version": "7",
+	"impi_version": "2017.2.174"
+    },
+	
+    "builders": [
+	{
+	    "type": "docker",
+	    "name": "rt",
+	    "image": "centos:{{user `centos_version`}}",
+	    "export_path": "rt-{{user `impi_version`}}.tar"
+	},
+	{
+	    "type": "docker",
+	    "name": "sdk",
+	    "image": "centos:{{user `centos_version`}}",
+	    "export_path": "sdk-{{user `impi_version`}}.tar"
+	}
+    ],
+
+    "provisioners": [
+	{
+	    "type": "ansible",
+	    "playbook_file": "common.yml",
+	    "host_alias": "{{build_name}}",
+	    "extra_arguments": ["--extra-vars", "impi_version={{user `impi_version`}}"]
+	}
+    ],
+
+    "post-processors": [
+	[
+	    {
+		"type": "shell-local",
+		"inline": [
+		    "sudo singularity build impi-{{build_name}}-{{user `impi_version`}}.simg {{build_name}}-{{user `impi_version`}}.tar"
+		]
+	    }
+	]
+    ]
+}

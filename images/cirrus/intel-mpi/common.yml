@@ -1,0 +1,68 @@
+---
+ - name: Minimal Infiniband setup
+   hosts: all
+   tasks:
+    - name: upgrade all
+      yum:
+        name: '*'
+        state: latest
+    - name: install infiniband
+      yum:
+        name:
+          - libibcm
+          - libibverbs
+          - libibverbs-utils
+          - librdmacm
+          - librdmacm-utils
+          - dapl
+          - environment-modules
+        state: latest
+
+ - name: Intel MPI unpack
+   hosts: all
+   tasks:
+    - copy:
+        src: l_mpi_{{ impi_version }}.tar.gz
+        dest: /tmp/l_mpi_{{ impi_version }}.tar.gz
+    - unarchive:
+        remote_src: yes
+        src: /tmp/l_mpi_{{ impi_version }}.tar.gz
+        dest: /tmp
+
+ - name: Install the MPI runtime only
+   hosts: rt
+   tasks:
+    - shell: rpm -i intel-comp-l-all-vars-*.noarch.rpm intel-compxe-pset-*.noarch.rpm intel-mpi-rt-core-*.x86_64.rpm intel-mpi-psxe-*.x86_64.rpm intel-psxe-common-*.noarch.rpm intel-psxe-licensing-*.noarch.rpm
+      args:
+        chdir: /tmp/l_mpi_{{ impi_version }}/rpm
+
+ - name: Install the MPI full SDK
+   hosts: sdk
+   tasks:
+    - replace:
+        path: /tmp/l_mpi_{{ impi_version }}/silent.cfg
+        regexp: ACCEPT_EULA=decline
+        replace: ACCEPT_EULA=accept
+    - command: ./install.sh --silent silent.cfg
+      args:
+        chdir: /tmp/l_mpi_{{ impi_version }}
+
+ - name: Tidy & environment
+   hosts: all
+   tasks:
+    - name: Remove MPI installer
+      file:
+        path:  "{{ item }}"
+        state: absent
+      with_items:
+        - /tmp/l_mpi_{{ impi_version }}
+        - /tmp/l_mpi_{{ impi_version }}.tar.gz
+
+    - name: Link env scripts
+      file:
+        state: hard
+        src: /opt/intel/impi/{{ impi_version }}/bin64/mpivars.{{ item }}
+        path: /etc/profile.d/intel.{{ item }}
+      with_items:
+        - sh
+        - csh
