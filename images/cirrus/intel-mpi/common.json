@@ -35,7 +35,9 @@
 	    {
 		"type": "shell-local",
 		"inline": [
-		    "sudo singularity build impi-{{build_name}}-{{user `impi_version`}}.simg {{build_name}}-{{user `impi_version`}}.tar"
+		    "sudo singularity build impi-{{build_name}}-{{user `impi_version`}}.simg {{build_name}}-{{user `impi_version`}}.tar",
+		    "mygroups=(`groups`)",
+		    "sudo chown $USER:${mygroups[0]} impi-{{build_name}}-{{user `impi_version`}}.simg"
 		]
 	    }
 	]
