@@ -1,0 +1,38 @@
+{
+    "description": "Build a Docker image with Centos and MPICH",
+
+    "variables": {
+        "centos_version": "7",
+        "mpich_version": "3.2"
+    },
+        
+    "builders": [
+        {
+            "type": "docker",
+            "name": "rt",
+            "image": "centos:{{user `centos_version`}}",
+            "export_path": "rt-{{user `mpich_version`}}.tar"
+        }
+    ],
+
+    "provisioners": [
+        {
+            "type": "ansible",
+            "playbook_file": "rt-yum.yml",
+            "extra_arguments": ["--extra-vars", "mpich_version={{user `mpich_version`}}"]
+        }
+    ],
+
+    "post-processors": [
+        [
+            {
+                "type": "shell-local",
+                "inline": [
+                    "sudo singularity build mpich-{{build_name}}-{{user `mpich_version`}}.simg {{build_name}}-{{user `mpich_version`}}.tar",
+		    "for mygroup in `groups`; do break; done;",
+                    "sudo chown $USER:$mygroup mpich-{{build_name}}-{{user `mpich_version`}}.simg"
+                ]
+            }
+        ]
+    ]
+}

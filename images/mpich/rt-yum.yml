@@ -1,0 +1,17 @@
+---
+ - name: Install MPICH and modules
+   hosts: all
+   tasks:
+    - name: yum install
+      yum:
+        name:
+         - mpich-{{ mpich_version }}
+         - environment-modules
+        state: latest
+    - name: remove parkill script
+      file:
+        path: /usr/lib64/mpich-{{ mpich_version }}/bin/parkill
+        state: absent
+    - name: remove perl (dependency of parkill)
+      shell: rpm -qa | grep perl | xargs rpm -e --nodeps
+
